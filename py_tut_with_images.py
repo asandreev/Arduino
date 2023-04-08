@@ -19,9 +19,6 @@ ser = serial.Serial(
 from pygame.locals import (
     RLEACCEL,
     K_UP,
-    K_DOWN,
-    K_LEFT,
-    K_RIGHT,
     K_ESCAPE,
     KEYDOWN,
     QUIT,
@@ -83,7 +80,6 @@ class Player(pygame.sprite.Sprite):
                 self.seq.append(chr(c)) #convert from ANSII
             if chr(c) == '\n':
                 joined_seq = ''.join(str(v) for v in self.seq) #Make a string from array
-                print(joined_seq)
                 self.seq = []
                 return joined_seq
     def addPoint(self):
@@ -103,7 +99,7 @@ class Package(pygame.sprite.Sprite):
                 random.randint(0, SCREEN_HEIGHT),
             )
         )
-        self.speed = random.randint(2, 5)
+        self.speed = random.randint(1, 5)
 
     # Move the package based on speed
     # Remove it when it passes the left edge of the screen
@@ -175,7 +171,6 @@ class Cloud(pygame.sprite.Sprite):
             self.kill()
 
 
-
 # Setup for sounds, defaults are good
 pygame.mixer.init()
 
@@ -219,6 +214,7 @@ collision_sound.set_volume(0.5)
 # Variable to keep our main loop running
 running = True
 start = False
+endGame = False
 
 # defining a font
 smallfont = pygame.font.SysFont('Arial',45, True)
@@ -230,21 +226,24 @@ color_yellow = (255,204,0)
 # this font
 text = smallfont.render('START' , True , color_yellow)
 
+all_sprites = pygame.sprite.Group()
 
 def text_objects(text, font):
         textSurface = font.render(text, True, color_yellow)
         return textSurface, textSurface.get_rect()
 
-def message_display(text):
+def message_display(text, high, width):
         largeText = pygame.font.Font('freesansbold.ttf',25)
         TextSurf, TextRect = text_objects("Points: " + text, largeText)
-        TextRect.center = ((80),(20))
+        TextRect.center = ((high),(width))
         screen.blit(TextSurf, TextRect)
         pygame.display.update()
 
 def start_game():
     global start 
     start = True
+    global endGame
+    endGame = False
     # Create our 'player'
     global player 
     player = Player()
@@ -258,8 +257,7 @@ def start_game():
     bombs = pygame.sprite.Group()
     global clouds 
     clouds = pygame.sprite.Group()
-    global explosion
-    explosion = pygame.sprite.Group()
+    global explosions
     global all_sprites 
     all_sprites = pygame.sprite.Group()
     all_sprites.add(player)
@@ -270,19 +268,23 @@ while running:
     if not start: 
         screen.fill((135, 206, 250))
         # Flip everything to the display
-        
+        for entity in all_sprites:
+            screen.blit(entity.surf, entity.rect)
+        if endGame:
+            message_display(str(player.points), 610, 232)
+
         # if mouse is hovered on a button it
         # changes to lighter shade 
         mouse = pygame.mouse.get_pos()
-        if 550 <= mouse[0] <= 670 and 350 <= mouse[1] <= 450:
-            pygame.draw.rect(screen,color_yellow,[550,350,140,40])
+        if 550 <= mouse[0] <= 670 and 250 <= mouse[1] <= 350:
+            pygame.draw.rect(screen,color_yellow,[550,250,140,40])
             text = smallfont.render('START' , True , color_red)
         else:
-            pygame.draw.rect(screen,color_red,[550,350,140,40])
+            pygame.draw.rect(screen,color_red,[550,250,140,40])
             text = smallfont.render('START' , True , color_yellow)
 
         # superimposing the text onto our button
-        screen.blit(text , (560,343))
+        screen.blit(text , (560,243))
 
         pygame.display.flip()
         for ev in pygame.event.get():
@@ -297,9 +299,8 @@ while running:
                 mouse = pygame.mouse.get_pos()
                 #if the mouse is clicked on the
                 # button the game is terminated
-                if 550 <= mouse[0] <= 670 and 350 <= mouse[1] <= 450:
+                if 550 <= mouse[0] <= 670 and 250 <= mouse[1] <= 350:
                     start_game()
-                    print(start)
     else:
         noise = player.getNoise()
         # Look at every event in the queue
@@ -351,7 +352,7 @@ while running:
         for entity in all_sprites:
             screen.blit(entity.surf, entity.rect)
 
-        message_display(str(player.points))
+        message_display(str(player.points), 80, 20)
 
         # Check if any enemies have collided with the player
         package = pygame.sprite.spritecollideany(player, enemies)
@@ -362,23 +363,20 @@ while running:
 
         bomb = pygame.sprite.spritecollideany(player, bombs)
         if bomb:
-        # If so, remove the player
-        
-
+            # If so, remove the player
             # Stop any moving sounds and play the collision sound
             move_up_sound.stop()
             move_down_sound.stop()
             collision_sound.play()
             bomb.kill()
             player.kill()
-            #noise = 0
-            new_explosion = Explosion()
-        
-            explosion.add(new_explosion)
-            all_sprites.add(new_explosion)
+            explosion = Explosion()
+            explosion.update()
+            all_sprites.add(explosion)
 
             # Stop the loop
             start = False
+            endGame = True
             # Flip everything to the display
             pygame.display.flip()
 
