@@ -35,7 +35,7 @@ gameDisplay = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 # Define the Player object extending pygame.sprite.Sprite
 # Instead of a surface, we use an image for a better looking sprite
 class Player(pygame.sprite.Sprite):
-    vspeed = 2
+    vspeed = 1
 
     def __init__(self):
         super(Player, self).__init__()
@@ -51,15 +51,15 @@ class Player(pygame.sprite.Sprite):
         print(noise)
         
         if pressed_keys[K_UP]:
-            self.vspeed = -2
+            self.vspeed = -18
             # self.rect.move_ip(0, -self.vspeed)
             move_up_sound.play()
         elif int(noise) > 25:
-            self.vspeed = -2
+            self.vspeed = -18
             move_up_sound.play()
         # elif int(noise) > 20: 
         #     move_up_sound.play()
-        elif self.vspeed < 2:
+        elif self.vspeed < 1:
             self.vspeed = self.vspeed + 1
 
         self.rect.move_ip(0, self.vspeed)
@@ -124,7 +124,7 @@ class Bomb(pygame.sprite.Sprite):
                 random.randint(0, SCREEN_HEIGHT),
             )
         )
-        self.speed = random.randint(5, 5)
+        self.speed = random.randint(1, 5)
 
     # Move the package based on speed
     # Remove it when it passes the left edge of the screen
@@ -192,8 +192,8 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 # Create custom events for adding a new package and cloud
 ADDpackage = pygame.USEREVENT + 1
 ADDBOMB = pygame.USEREVENT + 3
-pygame.time.set_timer(ADDpackage, 1500)
-pygame.time.set_timer(ADDBOMB, 2500)
+pygame.time.set_timer(ADDpackage, 1000)
+pygame.time.set_timer(ADDBOMB, 1500)
 ADDCLOUD = pygame.USEREVENT + 2
 pygame.time.set_timer(ADDCLOUD, 1000)
 pygame.display.set_caption("DHL PLANE")
@@ -201,14 +201,15 @@ pygame.display.set_caption("DHL PLANE")
 # Load and play our background music
 # Sound source: http://ccmixter.org/files/Apoxode/59262
 # License: https://creativecommons.org/licenses/by/3.0/
-pygame.mixer.music.load("Apoxode_-_Electric_1.mp3")
+pygame.mixer.music.load("music.wav")
 pygame.mixer.music.play(loops=-1)
 
 # Load all our sound files
 # Sound sources: Jon Fincher
-move_up_sound = pygame.mixer.Sound("flying.wav")
+move_up_sound = pygame.mixer.Sound("flying.mp3")
 move_down_sound = pygame.mixer.Sound("Falling_putter.ogg")
 collision_sound = pygame.mixer.Sound("Collision.wav")
+package_collect_sound = pygame.mixer.Sound("package-collect.wav")
 
 # Set the base volume for all sounds
 move_up_sound.set_volume(0.5)
@@ -357,7 +358,7 @@ while running:
         if package :
             player.addPoint()
             package.kill()
-            collision_sound.play()
+            package_collect_sound.play()
 
         bomb = pygame.sprite.spritecollideany(player, bombs)
         if bomb:
@@ -382,7 +383,7 @@ while running:
             pygame.display.flip()
 
             # Ensure we maintain a 30 frames per second rate
-            clock.tick(30)
+            clock.tick(60)
 
 # At this point, we're done, so we can stop and quit the mixer
 pygame.mixer.music.stop()
