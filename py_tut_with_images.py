@@ -6,7 +6,7 @@ import random
 
 import serial
 ser = serial.Serial(
-    port='COM3',\
+    port='COM6',\
     baudrate=9600,\
     parity=serial.PARITY_NONE,\
     stopbits=serial.STOPBITS_ONE,\
@@ -32,7 +32,7 @@ gameDisplay = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 # Define the Player object extending pygame.sprite.Sprite
 # Instead of a surface, we use an image for a better looking sprite
 class Player(pygame.sprite.Sprite):
-    vspeed = 1
+    vspeed = 2
 
     def __init__(self):
         super(Player, self).__init__()
@@ -49,13 +49,10 @@ class Player(pygame.sprite.Sprite):
         
         if pressed_keys[K_UP]:
             self.vspeed = -18
-            # self.rect.move_ip(0, -self.vspeed)
             move_up_sound.play()
         elif int(noise) > 25:
-            self.vspeed = -18
+            self.vspeed = -14
             move_up_sound.play()
-        # elif int(noise) > 20: 
-        #     move_up_sound.play()
         elif self.vspeed < 1:
             self.vspeed = self.vspeed + 1
 
@@ -213,7 +210,7 @@ collision_sound.set_volume(0.5)
 
 # Variable to keep our main loop running
 running = True
-start = False
+started = False
 endGame = False
 
 # defining a font
@@ -240,8 +237,8 @@ def message_display(text, high, width):
         pygame.display.update()
 
 def start_game():
-    global start 
-    start = True
+    global started 
+    started = True
     global endGame
     endGame = False
     # Create our 'player'
@@ -264,15 +261,8 @@ def start_game():
 
 # Our main loop
 while running:
-
-    if not start: 
-        screen.fill((135, 206, 250))
-        # Flip everything to the display
-        for entity in all_sprites:
-            screen.blit(entity.surf, entity.rect)
-        if endGame:
-            message_display(str(player.points), 610, 232)
-
+    screen.fill((135, 206, 250))
+    if not started: 
         # if mouse is hovered on a button it
         # changes to lighter shade 
         mouse = pygame.mouse.get_pos()
@@ -286,12 +276,16 @@ while running:
         # superimposing the text onto our button
         screen.blit(text , (560,243))
 
+        # Flip everything to the display
+        for entity in all_sprites:
+            screen.blit(entity.surf, entity.rect)
+        if endGame:
+            message_display(str(player.points), 610, 232)
+
         pygame.display.flip()
         for ev in pygame.event.get():
-            
             if ev.type == pygame.QUIT:
                 pygame.quit()
-                
             #checks if a mouse is clicked
             if ev.type == pygame.MOUSEBUTTONDOWN:
                 # stores the (x,y) coordinates into
@@ -344,9 +338,6 @@ while running:
         enemies.update()
         bombs.update()
         clouds.update()
-        
-        # Fill the screen with sky blue
-        screen.fill((135, 206, 250))
 
         # Draw all our sprites
         for entity in all_sprites:
@@ -375,13 +366,11 @@ while running:
             all_sprites.add(explosion)
 
             # Stop the loop
-            start = False
+            started = False
             endGame = True
-            # Flip everything to the display
-            pygame.display.flip()
 
             # Ensure we maintain a 30 frames per second rate
-            clock.tick(60)
+            clock.tick(30)
 
 # At this point, we're done, so we can stop and quit the mixer
 pygame.mixer.music.stop()
