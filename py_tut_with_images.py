@@ -6,10 +6,9 @@ from jsonpath_ng.ext import parse
 
 # Import random for random numbers
 import random
-
 import serial
 ser = serial.Serial(
-    port='COM6',\
+    port='COM3',\
     baudrate=9600,\
     parity=serial.PARITY_NONE,\
     stopbits=serial.STOPBITS_ONE,\
@@ -43,7 +42,6 @@ class Player(pygame.sprite.Sprite):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
         
-
     # Move the sprite based on keypresses
     def update(self, pressed_keys, noise):
         if noise is None or noise == '' :
@@ -226,15 +224,18 @@ color_yellow = (255,204,0)
 # rendering a text written in
 # this font
 
+highScore = 0
+
 # Getting top score
 api_url = "http://localhost:8080/highScores/search/getMaxScore"
-response = requests.get(api_url)
+try:
+    response = requests.get(api_url)
+    jsonpath_expression = parse("$._embedded.highScores[0].score")
+    for match in jsonpath_expression.find(response.json()):
+        highScore = match.value
+except:
+    highScore = 0
 
-highScore = 0
-jsonpath_expression = parse("$._embedded.highScores[0].score")
-for match in jsonpath_expression.find(response.json()):
-    highScore = match.value
-    
 text = smallfont.render('START' , True , color_yellow)
 
 all_sprites = pygame.sprite.Group()
@@ -253,8 +254,10 @@ def message_display(text, high, width):
 def pushHighScore(points):
     api_url_post = "http://localhost:8080/highScores"
     highscore = {"score": points}
-    response = requests.post(api_url_post, json=highscore)
-    print(response.status_code)
+    try:
+        response = requests.post(api_url_post, json=highscore)
+    except:
+        highscore = highscore
 
 def start_game():
     global started 
@@ -284,7 +287,6 @@ while running:
     screen.fill((135, 206, 250))
     if not started: 
         # if mouse is hovered on a button it
-        # changes to lighter shade 
         mouse = pygame.mouse.get_pos()
         if 550 <= mouse[0] <= 670 and 250 <= mouse[1] <= 350:
             pygame.draw.rect(screen,color_yellow,[550,250,140,40])
@@ -308,8 +310,7 @@ while running:
                 pygame.quit()
             #checks if a mouse is clicked
             if ev.type == pygame.MOUSEBUTTONDOWN:
-                # stores the (x,y) coordinates into
-                # the variable as a tuple
+                # stores the (x,y) coordinates
                 mouse = pygame.mouse.get_pos()
                 #if the mouse is clicked on the
                 # button the game is terminated
