@@ -9,7 +9,7 @@ import random
 
 import serial
 ser = serial.Serial(
-    port='COM4',\
+    port='COM6',\
     baudrate=9600,\
     parity=serial.PARITY_NONE,\
     stopbits=serial.STOPBITS_ONE,\
@@ -54,8 +54,10 @@ class Player(pygame.sprite.Sprite):
             move_up_sound.play()
         elif int(noise) > 100:
             self.vspeed = -20
+        elif int(noise) > 50:
+            self.vspeed = -12
         elif int(noise) > 25:
-            self.vspeed = -10
+            self.vspeed = -8
             move_up_sound.play()
         elif self.vspeed < 1:
             self.vspeed = self.vspeed+1
@@ -228,10 +230,11 @@ color_yellow = (255,204,0)
 api_url = "http://localhost:8080/highScores/search/getMaxScore"
 response = requests.get(api_url)
 
+highScore = 0
 jsonpath_expression = parse("$._embedded.highScores[0].score")
 for match in jsonpath_expression.find(response.json()):
     highScore = match.value
-
+    
 text = smallfont.render('START' , True , color_yellow)
 
 all_sprites = pygame.sprite.Group()
