@@ -32,7 +32,7 @@ gameDisplay = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 # Define the Player object extending pygame.sprite.Sprite
 # Instead of a surface, we use an image for a better looking sprite
 class Player(pygame.sprite.Sprite):
-    vspeed = 2
+    vspeed = 0
 
     def __init__(self):
         super(Player, self).__init__()
@@ -46,15 +46,16 @@ class Player(pygame.sprite.Sprite):
         if noise is None :
             noise = 0
         print(noise)
-        
         if pressed_keys[K_UP]:
             self.vspeed = -18
             move_up_sound.play()
+        elif int(noise) > 100:
+            self.vspeed = -20
         elif int(noise) > 25:
-            self.vspeed = -14
+            self.vspeed = -10
             move_up_sound.play()
         elif self.vspeed < 1:
-            self.vspeed = self.vspeed + 1
+            self.vspeed = self.vspeed+1
 
         self.rect.move_ip(0, self.vspeed)
         
@@ -96,7 +97,7 @@ class Package(pygame.sprite.Sprite):
                 random.randint(0, SCREEN_HEIGHT),
             )
         )
-        self.speed = random.randint(1, 5)
+        self.speed = random.randint(1, 3)
 
     # Move the package based on speed
     # Remove it when it passes the left edge of the screen
@@ -117,7 +118,7 @@ class Bomb(pygame.sprite.Sprite):
                 random.randint(0, SCREEN_HEIGHT),
             )
         )
-        self.speed = random.randint(1, 5)
+        self.speed = random.randint(1, 3)
 
     # Move the package based on speed
     # Remove it when it passes the left edge of the screen
@@ -163,7 +164,7 @@ class Cloud(pygame.sprite.Sprite):
     # Move the cloud based on a constant speed
     # Remove it when it passes the left edge of the screen
     def update(self):
-        self.rect.move_ip(-2, 0)
+        self.rect.move_ip(-1, 0)
         if self.rect.right < 0:
             self.kill()
 
@@ -184,15 +185,13 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 # Create custom events for adding a new package and cloud
 ADDpackage = pygame.USEREVENT + 1
 ADDBOMB = pygame.USEREVENT + 3
-pygame.time.set_timer(ADDpackage, 1000)
+pygame.time.set_timer(ADDpackage, 500)
 pygame.time.set_timer(ADDBOMB, 1500)
 ADDCLOUD = pygame.USEREVENT + 2
-pygame.time.set_timer(ADDCLOUD, 1000)
+pygame.time.set_timer(ADDCLOUD, 500)
 pygame.display.set_caption("DHL PLANE")
 
 # Load and play our background music
-# Sound source: http://ccmixter.org/files/Apoxode/59262
-# License: https://creativecommons.org/licenses/by/3.0/
 pygame.mixer.music.load("music.wav")
 pygame.mixer.music.play(loops=-1)
 
