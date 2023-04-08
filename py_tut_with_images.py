@@ -51,15 +51,15 @@ class Player(pygame.sprite.Sprite):
         print(noise)
         
         if pressed_keys[K_UP]:
-            self.vspeed = -5
+            self.vspeed = -2
             # self.rect.move_ip(0, -self.vspeed)
             move_up_sound.play()
-        elif int(noise) > 50:
-            self.vspeed = -5
+        elif int(noise) > 25:
+            self.vspeed = -2
             move_up_sound.play()
         # elif int(noise) > 20: 
         #     move_up_sound.play()
-        elif self.vspeed < 5:
+        elif self.vspeed < 2:
             self.vspeed = self.vspeed + 1
 
         self.rect.move_ip(0, self.vspeed)
@@ -103,7 +103,7 @@ class Package(pygame.sprite.Sprite):
                 random.randint(0, SCREEN_HEIGHT),
             )
         )
-        self.speed = random.randint(5, 10)
+        self.speed = random.randint(2, 5)
 
     # Move the package based on speed
     # Remove it when it passes the left edge of the screen
@@ -124,7 +124,7 @@ class Bomb(pygame.sprite.Sprite):
                 random.randint(0, SCREEN_HEIGHT),
             )
         )
-        self.speed = random.randint(5, 10)
+        self.speed = random.randint(5, 5)
 
     # Move the package based on speed
     # Remove it when it passes the left edge of the screen
@@ -133,8 +133,25 @@ class Bomb(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
   
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self):
+           super(Explosion, self).__init__()
+           self.surf = pygame.image.load("explosion.gif").convert()
+           self.surf.set_colorkey((0, 0, 0), RLEACCEL)
+           # The starting position is randomly generated
+           self.rect = self.surf.get_rect(
+               center=(
+                   (SCREEN_WIDTH/2),
+                   (SCREEN_HEIGHT/2),
+               )
+           )
 
-
+       # Move the cloud based on a constant speed
+       # Remove it when it passes the left edge of the screen
+    def update(self):
+           self.rect.move_ip(-2, 0)
+           if self.rect.right < 0:
+               self.kill()
 # Define the cloud object extending pygame.sprite.Sprite
 # Use an image for a better looking sprite
 class Cloud(pygame.sprite.Sprite):
@@ -153,7 +170,7 @@ class Cloud(pygame.sprite.Sprite):
     # Move the cloud based on a constant speed
     # Remove it when it passes the left edge of the screen
     def update(self):
-        self.rect.move_ip(-5, 0)
+        self.rect.move_ip(-2, 0)
         if self.rect.right < 0:
             self.kill()
 
@@ -189,9 +206,9 @@ pygame.mixer.music.play(loops=-1)
 
 # Load all our sound files
 # Sound sources: Jon Fincher
-move_up_sound = pygame.mixer.Sound("Rising_putter.ogg")
+move_up_sound = pygame.mixer.Sound("flying.wav")
 move_down_sound = pygame.mixer.Sound("Falling_putter.ogg")
-collision_sound = pygame.mixer.Sound("Collision.ogg")
+collision_sound = pygame.mixer.Sound("Collision.wav")
 
 # Set the base volume for all sounds
 move_up_sound.set_volume(0.5)
@@ -240,6 +257,8 @@ def start_game():
     bombs = pygame.sprite.Group()
     global clouds 
     clouds = pygame.sprite.Group()
+    global explosion
+    explosion = pygame.sprite.Group()
     global all_sprites 
     all_sprites = pygame.sprite.Group()
     all_sprites.add(player)
@@ -342,26 +361,28 @@ while running:
 
         bomb = pygame.sprite.spritecollideany(player, bombs)
         if bomb:
-            # If so, remove the player
-            player.kill()
+        # If so, remove the player
+        
 
             # Stop any moving sounds and play the collision sound
             move_up_sound.stop()
             move_down_sound.stop()
             collision_sound.play()
+            bomb.kill()
+            player.kill()
+            #noise = 0
+            new_explosion = Explosion()
+        
+            explosion.add(new_explosion)
+            all_sprites.add(new_explosion)
 
             # Stop the loop
             start = False
+            # Flip everything to the display
+            pygame.display.flip()
 
-            
-            bomb.kill()
-            collision_sound.play()
-
-        # Flip everything to the display
-        pygame.display.flip()
-
-        # Ensure we maintain a 30 frames per second rate
-        clock.tick(45)
+            # Ensure we maintain a 30 frames per second rate
+            clock.tick(30)
 
 # At this point, we're done, so we can stop and quit the mixer
 pygame.mixer.music.stop()
