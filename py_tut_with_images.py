@@ -1,12 +1,15 @@
 # Import the pygame module
 import pygame
+import requests
+import json
+from jsonpath_ng.ext import parse
 
 # Import random for random numbers
 import random
 
 import serial
 ser = serial.Serial(
-    port='COM6',\
+    port='COM4',\
     baudrate=9600,\
     parity=serial.PARITY_NONE,\
     stopbits=serial.STOPBITS_ONE,\
@@ -43,7 +46,7 @@ class Player(pygame.sprite.Sprite):
 
     # Move the sprite based on keypresses
     def update(self, pressed_keys, noise):
-        if noise is None :
+        if noise is None or noise == '' :
             noise = 0
         print(noise)
         if pressed_keys[K_UP]:
@@ -220,6 +223,15 @@ color_red = (212,5,17)
 color_yellow = (255,204,0)
 # rendering a text written in
 # this font
+
+# Getting top score
+api_url = "http://localhost:8080/highScores/search/getMaxScore"
+response = requests.get(api_url)
+
+jsonpath_expression = parse("$._embedded.highScores[0].score")
+for match in jsonpath_expression.find(response.json()):
+    highScore = match.value
+
 text = smallfont.render('START' , True , color_yellow)
 
 all_sprites = pygame.sprite.Group()
@@ -230,10 +242,16 @@ def text_objects(text, font):
 
 def message_display(text, high, width):
         largeText = pygame.font.Font('freesansbold.ttf',25)
-        TextSurf, TextRect = text_objects("Points: " + text, largeText)
+        TextSurf, TextRect = text_objects("Points: " + text + " High Score: " + str(highScore), largeText)
         TextRect.center = ((high),(width))
         screen.blit(TextSurf, TextRect)
         pygame.display.update()
+
+def pushHighScore(points):
+    api_url_post = "http://localhost:8080/highScores"
+    highscore = {"score": points}
+    response = requests.post(api_url_post, json=highscore)
+    print(response.status_code)
 
 def start_game():
     global started 
@@ -342,7 +360,7 @@ while running:
         for entity in all_sprites:
             screen.blit(entity.surf, entity.rect)
 
-        message_display(str(player.points), 80, 20)
+        message_display(str(player.points), 150, 20)
 
         # Check if any enemies have collided with the player
         package = pygame.sprite.spritecollideany(player, enemies)
@@ -363,6 +381,11 @@ while running:
             explosion = Explosion()
             explosion.update()
             all_sprites.add(explosion)
+
+            # Highscore management
+            if player.points > highScore :
+                pushHighScore(player.points)
+                highScore = player.points
 
             # Stop the loop
             started = False
