@@ -31,10 +31,6 @@ from pygame.locals import (
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 800
 
-def displayPoints():
-    font = pygame.font.SysFont(None, 25)
-    text = font.render("Points: "+str(player.points), True, (0,0,0))
-    gameDisplay.blit(text,(0,0))
 gameDisplay = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 # Define the Player object extending pygame.sprite.Sprite
 # Instead of a surface, we use an image for a better looking sprite
@@ -93,11 +89,11 @@ class Player(pygame.sprite.Sprite):
     def addPoint(self):
         self.points = self.points + 1
 
-# Define the enemy object extending pygame.sprite.Sprite
+# Define the package object extending pygame.sprite.Sprite
 # Instead of a surface, we use an image for a better looking sprite
-class Enemy(pygame.sprite.Sprite):
+class Package(pygame.sprite.Sprite):
     def __init__(self):
-        super(Enemy, self).__init__()
+        super(Package, self).__init__()
         self.surf = pygame.image.load("missile.png").convert()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         # The starting position is randomly generated, as is the speed
@@ -109,7 +105,7 @@ class Enemy(pygame.sprite.Sprite):
         )
         self.speed = random.randint(5, 10)
 
-    # Move the enemy based on speed
+    # Move the package based on speed
     # Remove it when it passes the left edge of the screen
     def update(self):
         self.rect.move_ip(-self.speed, 0)
@@ -130,7 +126,7 @@ class Bomb(pygame.sprite.Sprite):
         )
         self.speed = random.randint(5, 10)
 
-    # Move the enemy based on speed
+    # Move the package based on speed
     # Remove it when it passes the left edge of the screen
     def update(self):
         self.rect.move_ip(-self.speed, 0)
@@ -176,26 +172,14 @@ clock = pygame.time.Clock()
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-# Create custom events for adding a new enemy and cloud
-ADDENEMY = pygame.USEREVENT + 1
+# Create custom events for adding a new package and cloud
+ADDpackage = pygame.USEREVENT + 1
 ADDBOMB = pygame.USEREVENT + 3
-pygame.time.set_timer(ADDENEMY, 1500)
+pygame.time.set_timer(ADDpackage, 1500)
 pygame.time.set_timer(ADDBOMB, 2500)
 ADDCLOUD = pygame.USEREVENT + 2
 pygame.time.set_timer(ADDCLOUD, 1000)
 pygame.display.set_caption("DHL PLANE")
-# Create our 'player'
-player = Player()
-
-# Create groups to hold enemy sprites, cloud sprites, and all sprites
-# - enemies is used for collision detection and position updates
-# - clouds is used for position updates
-# - all_sprites isused for rendering
-enemies = pygame.sprite.Group()
-bombs = pygame.sprite.Group()
-clouds = pygame.sprite.Group()
-all_sprites = pygame.sprite.Group()
-all_sprites.add(player)
 
 # Load and play our background music
 # Sound source: http://ccmixter.org/files/Apoxode/59262
@@ -214,8 +198,23 @@ move_up_sound.set_volume(0.5)
 move_down_sound.set_volume(0.5)
 collision_sound.set_volume(0.5)
 
+# Variable to keep our main loop running
+running = True
+start = False
+
+# defining a font
+smallfont = pygame.font.SysFont('Arial',45, True)
+# light shade of the button
+color_red = (212,5,17)
+# dark shade of the button
+color_yellow = (255,204,0)
+# rendering a text written in
+# this font
+text = smallfont.render('START' , True , color_yellow)
+
+
 def text_objects(text, font):
-        textSurface = font.render(text, True, (0,0,0))
+        textSurface = font.render(text, True, color_yellow)
         return textSurface, textSurface.get_rect()
 
 def message_display(text):
@@ -225,105 +224,144 @@ def message_display(text):
         screen.blit(TextSurf, TextRect)
         pygame.display.update()
 
-# Variable to keep our main loop running
-running = True
+def start_game():
+    global start 
+    start = True
+    # Create our 'player'
+    global player 
+    player = Player()
+    # Create groups to hold package sprites, cloud sprites, and all sprites
+    # - enemies is used for collision detection and position updates
+    # - clouds is used for position updates
+    # - all_sprites isused for rendering
+    global enemies 
+    enemies = pygame.sprite.Group()
+    global bombs 
+    bombs = pygame.sprite.Group()
+    global clouds 
+    clouds = pygame.sprite.Group()
+    global all_sprites 
+    all_sprites = pygame.sprite.Group()
+    all_sprites.add(player)
 
 # Our main loop
 while running:
-    
-    noise = player.getNoise()
-    displayPoints()
-    # Look at every event in the queue
-    for event in pygame.event.get():
-        # Did the user hit a key?
-        if event.type == KEYDOWN:
-            # Was it the Escape key? If so, stop the loop
-            if event.key == K_ESCAPE:
+
+    if not start: 
+        screen.fill((135, 206, 250))
+        # Flip everything to the display
+        
+        # if mouse is hovered on a button it
+        # changes to lighter shade 
+        mouse = pygame.mouse.get_pos()
+        if 550 <= mouse[0] <= 670 and 350 <= mouse[1] <= 450:
+            pygame.draw.rect(screen,color_yellow,[550,350,140,40])
+            text = smallfont.render('START' , True , color_red)
+        else:
+            pygame.draw.rect(screen,color_red,[550,350,140,40])
+            text = smallfont.render('START' , True , color_yellow)
+
+        # superimposing the text onto our button
+        screen.blit(text , (560,343))
+
+        pygame.display.flip()
+        for ev in pygame.event.get():
+            
+            if ev.type == pygame.QUIT:
+                pygame.quit()
+                
+            #checks if a mouse is clicked
+            if ev.type == pygame.MOUSEBUTTONDOWN:
+                # stores the (x,y) coordinates into
+                # the variable as a tuple
+                mouse = pygame.mouse.get_pos()
+                #if the mouse is clicked on the
+                # button the game is terminated
+                if 550 <= mouse[0] <= 670 and 350 <= mouse[1] <= 450:
+                    start_game()
+                    print(start)
+    else:
+        noise = player.getNoise()
+        # Look at every event in the queue
+        for event in pygame.event.get():
+            # Did the user hit a key?
+            if event.type == KEYDOWN:
+                # Was it the Escape key? If so, stop the loop
+                if event.key == K_ESCAPE:
+                    running = False
+
+            # Did the user click the window close button? If so, stop the loop
+            elif event.type == QUIT:
                 running = False
 
-        # Did the user click the window close button? If so, stop the loop
-        elif event.type == QUIT:
-            running = False
+            # Should we add a new package?
+            elif event.type == ADDpackage:
+                # Create the new package, and add it to our sprite groups
+                new_package = Package()
+                enemies.add(new_package)
+                all_sprites.add(new_package)
 
-        # Should we add a new enemy?
-        elif event.type == ADDENEMY:
-            # Create the new enemy, and add it to our sprite groups
-            new_enemy = Enemy()
-            enemies.add(new_enemy)
-            all_sprites.add(new_enemy)
+                        # Should we add a new package?
+            elif event.type == ADDBOMB:
+                # Create the new package, and add it to our sprite groups
+                new_bomb = Bomb()
+                bombs.add(new_bomb)
+                all_sprites.add(new_bomb)
 
-                    # Should we add a new enemy?
-        elif event.type == ADDBOMB:
-            # Create the new enemy, and add it to our sprite groups
-            new_bomb = Bomb()
-            bombs.add(new_bomb)
-            all_sprites.add(new_bomb)
+            # Should we add a new cloud?
+            elif event.type == ADDCLOUD:
+                # Create the new cloud, and add it to our sprite groups
+                new_cloud = Cloud()
+                clouds.add(new_cloud)
+                all_sprites.add(new_cloud)
 
-        # Should we add a new cloud?
-        elif event.type == ADDCLOUD:
-            # Create the new cloud, and add it to our sprite groups
-            new_cloud = Cloud()
-            clouds.add(new_cloud)
-            all_sprites.add(new_cloud)
+        # Get the set of keys pressed and check for user input
+        pressed_keys = pygame.key.get_pressed()
+        player.update(pressed_keys,noise)
 
-    # Get the set of keys pressed and check for user input
-    pressed_keys = pygame.key.get_pressed()
-    player.update(pressed_keys,noise)
-
-    # Update the position of our enemies and clouds
-    enemies.update()
-    bombs.update()
-    clouds.update()
-    
-    # Fill the screen with sky blue
-    screen.fill((135, 206, 250))
-
-    # Draw all our sprites
-    for entity in all_sprites:
-        screen.blit(entity.surf, entity.rect)
-
-    message_display(str(player.points))
-
-    # Check if any enemies have collided with the player
-    enemy = pygame.sprite.spritecollideany(player, enemies)
-    if enemy :
-        # If so, remove the player
-        #player.kill()
-
-        # Stop any moving sounds and play the collision sound
-        #move_up_sound.stop()
-        #move_down_sound.stop()
-        #collision_sound.play()
-
-        # Stop the loop
-        #running = False
-
-        player.addPoint()
-        enemy.kill()
-        collision_sound.play()
-
-    bomb = pygame.sprite.spritecollideany(player, bombs)
-    if bomb:
-        # If so, remove the player
-        player.kill()
-
-        # Stop any moving sounds and play the collision sound
-        move_up_sound.stop()
-        move_down_sound.stop()
-        collision_sound.play()
-
-        # Stop the loop
-        running = False
-
+        # Update the position of our enemies and clouds
+        enemies.update()
+        bombs.update()
+        clouds.update()
         
-        bomb.kill()
-        collision_sound.play()
+        # Fill the screen with sky blue
+        screen.fill((135, 206, 250))
 
-    # Flip everything to the display
-    pygame.display.flip()
+        # Draw all our sprites
+        for entity in all_sprites:
+            screen.blit(entity.surf, entity.rect)
 
-    # Ensure we maintain a 30 frames per second rate
-    clock.tick(45)
+        message_display(str(player.points))
+
+        # Check if any enemies have collided with the player
+        package = pygame.sprite.spritecollideany(player, enemies)
+        if package :
+            player.addPoint()
+            package.kill()
+            collision_sound.play()
+
+        bomb = pygame.sprite.spritecollideany(player, bombs)
+        if bomb:
+            # If so, remove the player
+            player.kill()
+
+            # Stop any moving sounds and play the collision sound
+            move_up_sound.stop()
+            move_down_sound.stop()
+            collision_sound.play()
+
+            # Stop the loop
+            start = False
+
+            
+            bomb.kill()
+            collision_sound.play()
+
+        # Flip everything to the display
+        pygame.display.flip()
+
+        # Ensure we maintain a 30 frames per second rate
+        clock.tick(45)
 
 # At this point, we're done, so we can stop and quit the mixer
 pygame.mixer.music.stop()
